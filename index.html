@@ -40,7 +40,7 @@
   // 选择图片
   function selectImage(event) {
     // 移除上次生成的图片
-    if (document.querySelector('img')) {
+    if (document.querySelector('.base64').childNodes.length > 1) {
       document.querySelector('.base64').removeChild(document.querySelector('img'))
     }
     // 读取文件
