@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>图片压缩</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="renderer" content="webkit">
+</head>
+
+<body>
+  <form>
+    <input type="file" accept="image/*" onchange="selectImage(event)">
+  </form>
+  <p>是否调整尺寸<input type="checkbox" checked onchange="customSize(event)"></p>
+  <p class='resize'>压缩后最大宽度: <input type="number" class="width" value="640"> px</p>
+  <p class='resize'>压缩后最大高度: <input type="number" class="height" value="360"> px</p>
+  <p>
+    <input type="range" min="0" max="100" onchange="rangeChange(event)">
+    <span class='range-value'>压缩质量: 50%</span>
+  </p>
+  <div class='base64'>base64压缩结果,右键保存:</div>
+</body>
+
+<script>
+  // 是否调整尺寸
+  function customSize(event) {
+    document.querySelectorAll('.resize').forEach((item) => {
+      if (event.target.checked) {
+        item.style.display = 'block'
+      } else {
+        item.style.display = 'none'
+      }
+    })
+  }
+  // 拖动压缩范围滑块
+  function rangeChange(event) {
+    document.querySelector('.range-value').innerHTML = '压缩质量: ' + event.target.value + '%'
+  }
+  // 选择图片
+  function selectImage(event) {
+    // 移除上次生成的图片
+    if (document.querySelector('img')) {
+      document.querySelector('.base64').removeChild(document.querySelector('img'))
+    }
+    // 读取文件
+    var file = event.target.files[0]
+    var fileReader = new FileReader()
+    fileReader.readAsDataURL(file)
+    fileReader.onload = (readerEvent) => {
+      // 创建图片
+      var image = new Image();
+      image.src = readerEvent.target.result;
+      image.onload = (imageEvent) => {
+        var w = image.naturalWidth
+        var h = image.naturalHeight
+        console.log('原始宽度', w);
+        console.log('原始高度', h);
+        // 是否调整尺寸
+        if (document.querySelector('input[type=checkbox]').checked) {
+          var maxWidth = document.querySelector('.width').value
+          var maxHeight = document.querySelector('.height').value
+          var resizeW
+          var resizeH
+          if (w > maxWidth || h > maxHeight) {
+            var ratio = Math.max(w / maxWidth, h / maxHeight);
+            resizeW = w / ratio;
+            resizeH = h / ratio;
+          } else {
+            resizeW = w;
+            resizeH = h;
+          }
+        } else {
+          var resizeW = w
+          var resizeH = h
+        }
+        // 生成canvas
+        var canvas = document.createElement("canvas");
+        canvas.width = resizeW;
+        canvas.height = resizeH;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0, resizeW, resizeH);
+        // 进行base64压缩
+        var compressLevel = document.querySelector('input[type=range]').value / 100
+        var base64 = canvas.toDataURL('image/jpeg', compressLevel);
+        console.log(base64)
+        var img = document.createElement("img");
+        img.src = base64
+        document.querySelector('.base64').appendChild(img)
+        // 重置表单,清楚选择结果,可以下次选择同一张图片
+        document.querySelector('form').reset()
+      }
+    }
+  }
+</script>
+
+</html>
